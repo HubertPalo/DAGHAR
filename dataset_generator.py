@@ -228,7 +228,6 @@ def generate_views(
 
 def generate_hapt_views(data: pd.DataFrame, train_user_ids: List[int], val_user_ids: List[int], test_user_ids: List[int], output_path: Path):
     # Separate the data per users
-    print(data.head())
     train_data = data[data['user'].isin(train_user_ids)].sort_values(['user', 'activity code', 'window']).reset_index(drop=True)
     val_data = data[data['user'].isin(val_user_ids)].sort_values(['user', 'activity code', 'window']).reset_index(drop=True)
     test_data = data[data['user'].isin(test_user_ids)].sort_values(['user', 'activity code', 'window']).reset_index(drop=True)
@@ -243,9 +242,7 @@ def generate_hapt_views(data: pd.DataFrame, train_user_ids: List[int], val_user_
     create_dataset(
         to_delete_output_path,
         concatenated_path,
-        label=None,
-        columns_to_maintain_in_linearize_dataframe=["user"],
-        column_prefixes=["accel-x", "accel-y", "accel-z"]
+        label=None
     )
 
     balanced_data_per_user_and_class = []
@@ -537,6 +534,7 @@ def main(datasets_to_process: List[str], output_path: str):
             grouped_train_data = train_data.groupby(['user', 'standard activity code']).count()[['activity code']].reset_index()
             grouped_train_data = grouped_train_data.groupby('user').min()['activity code'].sort_values().reset_index()
             users_in_val_ids = [int(user_id) for user_id in grouped_train_data.iloc[-4:]['user'].tolist()]
+            users_in_train_ids = [int(user_id) for user_id in users_in_train_ids if user_id not in users_in_val_ids]
 
             generate_hapt_views(data, users_in_train_ids, users_in_val_ids, users_in_test_ids, output_path)
             # assert False
