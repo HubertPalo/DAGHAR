@@ -38,6 +38,8 @@ column_group: Dict[str, str] = {
     "WISDM": ["user", "activity code", "window"],
     "UCI": ["user", "activity code", "serial"],
     "RealWorld": ["user", "activity code", "position"],
+    "HAPT": ["user", "activity code", "serial"],
+    "RecodGait_v2": ["user", "index", "session"],
 }
 
 standard_activity_code_map: Dict[str, Dict[Union[str, int], int]] = {
@@ -97,6 +99,20 @@ standard_activity_code_map: Dict[str, Dict[Union[str, int], int]] = {
         12: -1,  # lie to stand
     },
     "RealWorld": standard_activity_code_realworld_map,
+    "HAPT": {
+        1: 2,  # walk
+        2: 3,  # stair up
+        3: 4,  # stair down
+        4: 0,  # sit
+        5: 1,  # stand
+        6: 8,  # Laying
+        7: 9,  # stand to sit
+        8: 9,  # sit to stand
+        9: 9,  # sit to lie
+        10: 9,  # lie to sit
+        11: 9,  # stand to lie
+        12: 9,  # lie to stand
+    },
 }
 
 standard_activity_code_names: Dict[int, str] = {
@@ -150,6 +166,9 @@ feature_columns: Dict[str, List[str]] = {
         "gyro-y",
         "gyro-z",
     ],
+    "HAPT": ["accel-x", "accel-y", "accel-z", "gyro-x", "gyro-y", "gyro-z"],
+    "RecodGait_v2": ["accel-x", "accel-y", "accel-z"],
+
 }
 
 match_columns: Dict[str, List[str]] = {
@@ -161,6 +180,7 @@ match_columns: Dict[str, List[str]] = {
     "RealWorld_thigh": ["user", "window", "activity code", "position"],
     "RealWorld_upperarm": ["user", "window", "activity code", "position"],
     "RealWorld_waist": ["user", "window", "activity code", "position"],
+    "HAPT": ["user", "serial", "window", "activity code"],
 }
 
 
@@ -367,4 +387,79 @@ pipelines: Dict[str, Dict[str, Pipeline]] = {
             ]
         ),
     },
+    # HAPT pipelines
+    "HAPT": {
+        "raw_dataset": Pipeline(
+            [
+                Windowize(
+                    features_to_select=feature_columns["HAPT"],
+                    samples_per_window=150,
+                    samples_per_overlap=0,
+                    groupby_column=column_group["HAPT"],
+                ),
+                AddStandardActivityCode(standard_activity_code_map["HAPT"]),
+            ]
+        ),
+        "standardized": Pipeline(
+            [
+                Convert_G_to_Ms2(axis_columns=["accel-x", "accel-y", "accel-z"]),
+                ButterworthFilter(
+                    axis_columns=["accel-x", "accel-y", "accel-z"],
+                    fs=50,
+                    btype="high",
+                ),
+                ResamplerPoly(
+                    features_to_select=feature_columns["HAPT"],
+                    up=2,
+                    down=5,
+                    groupby_column=column_group["HAPT"],
+                ),
+                Windowize(
+                    features_to_select=feature_columns["HAPT"],
+                    samples_per_window=60,
+                    samples_per_overlap=0,
+                    groupby_column=column_group["HAPT"],
+                ),
+                AddStandardActivityCode(standard_activity_code_map["HAPT"]),
+            ]
+        ),
+    },
+    # RecodGait pipelines
+    "RecodGait_v2": {
+        "raw_dataset": Pipeline(
+            [
+                Windowize(
+                    features_to_select=feature_columns["RecodGait_v2"],
+                    samples_per_window=120,
+                    samples_per_overlap=0,
+                    groupby_column=column_group["RecodGait_v2"],
+                ),
+            ]
+        ),
+        "standardized": Pipeline(
+            [
+                # CalcTimeDiffMean(
+                #     groupby_column=column_group["RecodGait_v2"],
+                #     column_to_diff="accel-start-time",
+                #     new_column_name="timestamp diff",
+                # ),
+                ButterworthFilter(
+                    axis_columns=["accel-x", "accel-y", "accel-z"],
+                    fs=40,
+                ),
+                ResamplerPoly(
+                    features_to_select=feature_columns["RecodGait_v2"],
+                    up=2,
+                    down=4,
+                    groupby_column=column_group["RecodGait_v2"],
+                ),
+                Windowize(
+                    features_to_select=feature_columns["RecodGait_v2"],
+                    samples_per_window=60,
+                    samples_per_overlap=0,
+                    groupby_column=column_group["RecodGait_v2"],
+                ),
+            ]
+        )
+    }
 }

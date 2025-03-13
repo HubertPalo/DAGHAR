@@ -35,33 +35,33 @@ download_and_extract_dataset () {
 # KUHAR
 ################################################################################
 
-download_and_extract_dataset "https://data.mendeley.com/public-files/datasets/45f952y38r/files/d3126562-b795-4eba-8559-310a25859cc7/file_downloaded" "KuHar" || die "Failed to download and process the KuHar dataset."
-echo "-------------------------------------------------------------------------"
+# download_and_extract_dataset "https://data.mendeley.com/public-files/datasets/45f952y38r/files/d3126562-b795-4eba-8559-310a25859cc7/file_downloaded" "KuHar" || die "Failed to download and process the KuHar dataset."
+# echo "-------------------------------------------------------------------------"
 
 ################################################################################
 # MotionSense
 ################################################################################
 
-echo "We are downloading the MotionSense dataset from github as it does not requires authentication."
-download_and_extract_dataset "https://github.com/mmalekzadeh/motion-sense/raw/master/data/A_DeviceMotion_data.zip" "MotionSense" || die "Failed to download and process the MotionSense dataset."
-rm -rf "$ORIGINAL_DATA_DIR/MotionSense/__MACOSX" 
-echo "-------------------------------------------------------------------------"
+# echo "We are downloading the MotionSense dataset from github as it does not requires authentication."
+# download_and_extract_dataset "https://github.com/mmalekzadeh/motion-sense/raw/master/data/A_DeviceMotion_data.zip" "MotionSense" || die "Failed to download and process the MotionSense dataset."
+# rm -rf "$ORIGINAL_DATA_DIR/MotionSense/__MACOSX" 
+# echo "-------------------------------------------------------------------------"
 
 ################################################################################
 # RealWorld
 ################################################################################
 
-download_and_extract_dataset "http://wifo5-14.informatik.uni-mannheim.de/sensor/dataset/realworld2016/realworld2016_dataset.zip" "RealWorld" || die "Failed to download and process the RealWorld dataset."
+# download_and_extract_dataset "http://wifo5-14.informatik.uni-mannheim.de/sensor/dataset/realworld2016/realworld2016_dataset.zip" "RealWorld" || die "Failed to download and process the RealWorld dataset."
 
-# reorganize the RealWorld dataset
-if [ ! -d "$ORIGINAL_DATA_DIR/RealWorld/realworld2016_dataset" ]; then
-    mv "$ORIGINAL_DATA_DIR/RealWorld/" "$ORIGINAL_DATA_DIR/temp"
-    mkdir -p "$ORIGINAL_DATA_DIR/RealWorld/realworld2016_dataset"
-    mv $ORIGINAL_DATA_DIR/temp/* "$ORIGINAL_DATA_DIR/RealWorld/realworld2016_dataset"
-    rm -r "$ORIGINAL_DATA_DIR/temp"
-fi
+# # reorganize the RealWorld dataset
+# if [ ! -d "$ORIGINAL_DATA_DIR/RealWorld/realworld2016_dataset" ]; then
+#     mv "$ORIGINAL_DATA_DIR/RealWorld/" "$ORIGINAL_DATA_DIR/temp"
+#     mkdir -p "$ORIGINAL_DATA_DIR/RealWorld/realworld2016_dataset"
+#     mv $ORIGINAL_DATA_DIR/temp/* "$ORIGINAL_DATA_DIR/RealWorld/realworld2016_dataset"
+#     rm -r "$ORIGINAL_DATA_DIR/temp"
+# fi
 
-echo "-------------------------------------------------------------------------"
+# echo "-------------------------------------------------------------------------"
 
 ################################################################################
 # UCI-HAR
@@ -74,13 +74,24 @@ echo "-------------------------------------------------------------------------"
 # WISDM
 ################################################################################
 
-download_and_extract_dataset "https://archive.ics.uci.edu/static/public/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset.zip" "WISDM" || die "Failed to download and process the WISDM dataset."
+# download_and_extract_dataset "https://archive.ics.uci.edu/static/public/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset.zip" "WISDM" || die "Failed to download and process the WISDM dataset."
+# echo "-------------------------------------------------------------------------"
+
+# if [ ! -d "$ORIGINAL_DATA_DIR/WISDM/wisdm-dataset" ]; then
+#     unzip "$ORIGINAL_DATA_DIR/WISDM/wisdm-dataset.zip" -d "$ORIGINAL_DATA_DIR/WISDM" || die "Failed to extract the WISDM dataset."
+#     rm "$ORIGINAL_DATA_DIR/WISDM/wisdm-dataset.zip" || die "Failed to remove the WISDM dataset zip file."
+# fi
+
+################################################################################
+# RecodGaitv2
+################################################################################
+
+download_and_extract_dataset "https://figshare.com/ndownloader/files/31116205" "RecodGaitv2" || die "Failed to download and process the RecodGaitv2 dataset."
 echo "-------------------------------------------------------------------------"
 
-if [ ! -d "$ORIGINAL_DATA_DIR/WISDM/wisdm-dataset" ]; then
-    unzip "$ORIGINAL_DATA_DIR/WISDM/wisdm-dataset.zip" -d "$ORIGINAL_DATA_DIR/WISDM" || die "Failed to extract the WISDM dataset."
-    rm "$ORIGINAL_DATA_DIR/WISDM/wisdm-dataset.zip" || die "Failed to remove the WISDM dataset zip file."
-fi
-
+# if [ ! -d "$ORIGINAL_DATA_DIR/RecodGaitv2/recodgait-dataset" ]; then
+#     unzip "$ORIGINAL_DATA_DIR/RecodGaitv2/recodgait-dataset.zip" -d "$ORIGINAL_DATA_DIR/RecodGaitv2" || die "Failed to extract the RecodGaitv2 dataset."
+#     rm "$ORIGINAL_DATA_DIR/RecodGaitv2/recodgait-dataset.zip" || die "Failed to remove the RecodGaitv2 dataset zip file."
+# fi
 ################################################################################
 echo "All datasets are downloaded and extracted successfully."

@@ -768,6 +768,115 @@ def real_world_organize():
 
     return workspace, users
 
+def read_recodgait_v2(recod_gait_path: str) -> pd.DataFrame:
+    """Read the RecodGaitV2 dataset and return a DataFrame with the data (coming from all txt files)
+    The returned dataframe has the following columns:
+    - accel-x: Acceleration on the x axis
+    - accel-y: Acceleration on the y axis
+    - accel-z: Acceleration on the z axis
+    - user: User code
+    - session: Session number
+    - index: Index of the sample coming from the txt
+    This dataset has rotation vectors, but they are not used in this function
+
+    Parameters
+    ----------
+    recod_gait_path : str
+        Path to the RecodGaitV2 dataset
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with the data from the RecodGaitV2 dataset
+    """
+
+    recod_gait_path = Path(recod_gait_path)
+
+    features_acc = {
+        "accel-start-time": np.float32,
+        "accel-x": np.float32,
+        "accel-y": np.float32,
+        "accel-z": np.float32,
+    }
+
+    dfs = []
+    index = 1
+    for file in natsorted(recod_gait_path.glob("*.txt")):
+        if "accelerometer" in file.name:
+            file_name = file.name
+            user = file.name.split("__")[0]
+            session = file.name.split("__")[1]
+
+            # Reading the accelerometer data
+            df = pd.read_csv(
+                file,
+                sep=",",
+                header=None,
+                names=features_acc.keys(),
+                dtype=features_acc,
+            )
+            df = df[500:-500].reset_index(drop=True)
+            
+            time_acc = np.array(df["accel-start-time"])
+            time_acc = (time_acc - time_acc[0]) / 1e9
+
+            # We interpolate the accelerometer data to fix the sampling rate to 40 Hz
+            df_acc, new_time = interpolation(
+                df, ["accel-x", "accel-y", "accel-z"], time_acc
+            )
+            df_acc["accel-start-time"] = new_time
+
+            df = df_acc.copy()
+
+            # df['accel-start-time'] = (df['accel-start-time'] - df['accel-start-time'][0]) / 1e9
+
+            df["user"] = int(user)
+            df["session"] = int(session[-1])
+            df["index"] = index
+            index += 1
+
+            # Drop samples with NaN
+            df.dropna(inplace=True)
+            df.reset_index(drop=True, inplace=True)
+
+            dfs.append(df)
+
+    df = pd.concat(dfs, axis=0)
+    df.reset_index(drop=True, inplace=True)
+
+    return df
+
+def interpolation(df: pd.DataFrame, signals: list, time: np.array) -> pd.DataFrame:
+    """Interpolate the signals in the dataframe.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe with the signals.
+    signals : list
+        List of signals to interpolate.
+    time : np.array
+        Array with the timestamps of the signals.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe with the interpolated signals.
+    """
+    df = df.copy()
+    series = []
+    for signal in signals:
+        serie = np.array(df[signal])
+
+        interp = interpolate.interp1d(
+            time, serie, kind="linear", fill_value="extrapolate"
+        )
+        new_time = np.arange(0, time[-1], 1 / 40)
+        new_serie = interp(new_time)
+        series.append(new_serie)
+
+    return pd.DataFrame(np.array(series).T, columns=signals), new_time
+
 
 def sanity_function(train_df, val_df, test_df):
     """This function will print some information about the datasets, such as the size of each dataset, the number of samples per user and activity, etc.

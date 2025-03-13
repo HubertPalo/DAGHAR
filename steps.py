@@ -458,7 +458,7 @@ class Convert_G_to_Ms2:
 class ButterworthFilter:
     """Apply the Butterworth filter to remove gravity."""
 
-    def __init__(self, axis_columns: List[str], fs: float):
+    def __init__(self, axis_columns: List[str], fs: float, btype: str = "lowpass"):
         """
         Parameters
         ----------
@@ -469,6 +469,7 @@ class ButterworthFilter:
         """
         self.axis_columns = axis_columns
         self.fs = fs
+        self.btype = btype
 
     def __call__(self, df: pd.DataFrame) -> pd.DataFrame:
         """Apply the Butterworth filter to remove gravity.
@@ -483,7 +484,7 @@ class ButterworthFilter:
         pd.DataFrame
             Dataframe with the filtered acceleration data (passed filter).
         """
-        h = signal.butter(3, 0.3, "hp", fs=self.fs, output="sos")
+        h = signal.butter(3, 0.3, btype=self.btype, fs=self.fs, output="sos")
         for axis_col in self.axis_columns:
             df[axis_col] = signal.sosfiltfilt(h, df[axis_col].values)
         return df
